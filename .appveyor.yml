@@ -1,0 +1,79 @@
+image:
+  - Visual Studio 2017
+
+environment:
+  global:
+    NAME: five
+    ASDF_SYSTEM: bodge-five
+    MSYS2_DIR: msys64
+  matrix:
+  - platform: x64
+    TARGET_ARCH: x86_64
+    CFLAGS: -m64
+    CXXFLAGS: -fpermissive
+    PACKAGES: mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-eigen3 mingw-w64-x86_64-boost mingw-w64-x86_64-libpng
+    COMPILER: msys2
+    BIT: 64
+    MSYS2_ARCH: $(TARGET_ARCH)
+    MSYSTEM: MINGW64
+    PATH: C:\$(MSYS2_DIR)\$(MSYSTEM)\bin;C:\$(MSYS2_DIR)\usr\bin;$(PATH)
+
+skip_non_tags: true
+
+branches:
+  only:
+    - master
+    - "/^v\\d+(\\.\\d+)+$/"
+
+install:
+  - set APPVEYOR_BUILD_DIR=$(cygpath -u '%APPVEYOR_BUILD_FOLDER%')
+  - git submodule update --init --recursive
+  - >
+    sh -c "
+    pacman --needed --noconfirm -S zip unzip base-devel %PACKAGES%
+    && curl -L http://bodge.borodust.org/files/install.sh | sh
+    "
+
+build_script:
+  - set TARGET_NAME=lib%NAME%.dll.bodged
+  - set TARGET_VERSION=%TARGET_ARCH%-windows-%APPVEYOR_REPO_TAG_NAME%
+  - set TARGET_ARTIFACT=%TARGET_NAME%-%TARGET_VERSION%
+  - set TARGET_WRAPPER=%TARGET_NAME%.wrapper-%TARGET_VERSION%
+  - set SPEC_ARCHIVE=%TARGET_ARTIFACT%-spec.zip
+  - >
+    sh -c "
+    export PATH=$HOME/bin/:$PATH
+    && CFLAGS='%CFLAGS%' CXXFLAGS='%CXXFLAGS%' TARGET_ARCH=%TARGET_ARCH% cd lib/ && make clean build
+    && rm -rf %APPVEYOR_BUILD_DIR%/spec/*
+    && ln -s %APPVEYOR_BUILD_DIR%/ ~/quicklisp/local-projects/
+    && $HOME/bin/lisp %APPVEYOR_BUILD_DIR%/util/regen-spec.lisp '%ASDF_SYSTEM%' t %TARGET_ARCH%
+    && cd ~/quicklisp/local-projects/%ASDF_SYSTEM%/ && zip -r spec.zip spec/
+    && mv ~/quicklisp/local-projects/%ASDF_SYSTEM%/spec.zip %APPVEYOR_BUILD_DIR%/
+    "
+  - mv %APPVEYOR_BUILD_FOLDER%\lib\%TARGET_NAME% %APPVEYOR_BUILD_FOLDER%\%TARGET_ARTIFACT%
+  - mv %APPVEYOR_BUILD_FOLDER%\lib\%TARGET_NAME%.wrapper  %APPVEYOR_BUILD_FOLDER%\%TARGET_WRAPPER%
+  - mv %APPVEYOR_BUILD_FOLDER%\spec.zip %APPVEYOR_BUILD_FOLDER%\%SPEC_ARCHIVE%
+
+artifacts:
+  - path: $(TARGET_ARTIFACT)
+    name: target_artifact
+
+  - path: $(SPEC_ARCHIVE)
+    name: spec_archive
+
+  - path: $(TARGET_WRAPPER)
+    name: target_wrapper
+
+deploy:
+  provider: GitHub
+  release: $(APPVEYOR_REPO_TAG_NAME)
+  tag: $(APPVEYOR_REPO_TAG_NAME)
+  description: $(APPVEYOR_REPO_COMMIT_MESSAGE)
+  auth_token:
+    secure: Z5XWjDOBlCrmfz3SQAjnLKtdgI5B2b/owJhRPNWYGrI+qwVNbBc4cZiroBZReWP7
+  artifact: target_artifact, spec_archive, target_wrapper
+  force_update: true
+  draft: false
+  prerelease: false
+  on:
+    appveyor_repo_tag: true

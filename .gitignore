@@ -1,0 +1,18 @@
+# lisp junk
+*.FASL
+*.fasl
+*.lisp-temp
+
+# emacs junk
+\#*
+*~
+.\#*
+
+# system dependent junk
+local/
+
+# build junk
+lib/lib*.bodged*
+
+# macOS crap
+**/.DS_Store

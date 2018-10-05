@@ -1,0 +1,3 @@
+[submodule "lib/libfive"]
+	path = lib/libfive
+	url = https://github.com/borodust/libfive.git
