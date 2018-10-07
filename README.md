@@ -23,5 +23,6 @@ Wrapper over [`libfive`](https://github.com/libfive/libfive) library.
 ## Example
 
 ```lisp
-(ql:quickload '(five-blob bodge-five))
+(ql:quickload :bodge-five/example)
+(libfive.example:render)
 ```

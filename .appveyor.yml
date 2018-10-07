@@ -35,10 +35,10 @@ install:
     "
 
 build_script:
-  - set TARGET_NAME=lib%NAME%.dll.bodged
+  - set TARGET_NAME=lib%NAME%
   - set TARGET_VERSION=%TARGET_ARCH%-windows-%APPVEYOR_REPO_TAG_NAME%
-  - set TARGET_ARTIFACT=%TARGET_NAME%-%TARGET_VERSION%
-  - set TARGET_WRAPPER=%TARGET_NAME%.wrapper-%TARGET_VERSION%
+  - set TARGET_ARTIFACT=%TARGET_NAME%.dll-%TARGET_VERSION%
+  - set TARGET_WRAPPER=%TARGET_NAME%.wrapper.dll-%TARGET_VERSION%
   - set SPEC_ARCHIVE=%TARGET_ARTIFACT%-spec.zip
   - >
     sh -c "
@@ -50,8 +50,8 @@ build_script:
     && cd ~/quicklisp/local-projects/%ASDF_SYSTEM%/ && zip -r spec.zip spec/
     && mv ~/quicklisp/local-projects/%ASDF_SYSTEM%/spec.zip %APPVEYOR_BUILD_DIR%/
     "
-  - mv %APPVEYOR_BUILD_FOLDER%\lib\%TARGET_NAME% %APPVEYOR_BUILD_FOLDER%\%TARGET_ARTIFACT%
-  - mv %APPVEYOR_BUILD_FOLDER%\lib\%TARGET_NAME%.wrapper  %APPVEYOR_BUILD_FOLDER%\%TARGET_WRAPPER%
+  - mv %APPVEYOR_BUILD_FOLDER%\lib\%TARGET_NAME%.dll %APPVEYOR_BUILD_FOLDER%\%TARGET_ARTIFACT%
+  - mv %APPVEYOR_BUILD_FOLDER%\lib\%TARGET_NAME%.wrapper.dll  %APPVEYOR_BUILD_FOLDER%\%TARGET_WRAPPER%
   - mv %APPVEYOR_BUILD_FOLDER%\spec.zip %APPVEYOR_BUILD_FOLDER%\%SPEC_ARCHIVE%
 
 artifacts:

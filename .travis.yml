@@ -6,8 +6,8 @@ env:
   global:
     - NAME: five
     - ASDF_SYSTEM: bodge-five
-    - DEB_CACHE_DIR: $HOME/.cache/deb/
-    - BOOST_CACHE_DIR: $HOME/.cache/boost-dist/
+    - DEB_CACHE_DIR: $HOME/.cache/deb
+    - BOOST_CACHE_DIR: $HOME/.cache/boost-dist
     - BOOST_NAME: boost_1_68_0
     - PATH: ~/bin/:$PATH
     - secure: "qXzqWRgS8wMyjAFA9xwcfHqgBVvDdj1nwI5QWgeF7fnYRf5k32JbWD02/orw2cIsOCk0SavmhlUe/rG1IGOdApjcMVQwS982vFyu5ch7+CSXUFSt97zLga2zzGPrl0j8LYDFoiymQpuphtL3XGaIIJcpw/jS9NzdCiMSrSrLe9S6a71BIGO73aRvgbGepZGMnfSIaIAJqjSFnlPS1wtJdB2uggTEV6dhHibxoqz/nZJlHuipjgT8e1FkIh6w3vMkXplizU7uKCFE5bhdDjvDozU0jPKGtixwUsawR1hxCgUiDHfFazUPUcCgr9BBZzd7Ti/I8iEYkqft9+EQQKXFyiedojpkRlNtqexgxaRAV0nuyH4ZOK1RrdyMGRE2QiSvgGAKzbY2leA7qlVg+yc5bd0W0AP+c5COjUI7poPbi9b/T/Y4EXj8RfVY5MU++nyuYE523HC3y/R/hhXablniLa3jhoTd7pp28JyifVYhZYK6oL7hcIlIlU+58vWNDiX43Ncmk46/la30atK9d+16bUL0sT4vr2hzfZEsF++NH0jIhke+nsOm4qFlPOML2UnXRdRIZ5vWePWCxs9INE0v589T8vsyTG36KG2HzbTPN8UFE5gCGHWU6+Nj6Ntl4fQyfs8tT49oqip6TneV+sjO660UDDr1w0tD1gjuPGJXuyY="
@@ -19,11 +19,15 @@ matrix:
       - TARGET_ARCH=x86_64
       - CFLAGS=-m64
       - EXTENSION=so
+      - LIBNAME=lib$NAME.$EXTENSION
+      - WRAPPER_NAME=lib$NAME.wrapper.$EXTENSION
   - os: osx
     env:
       - TARGET_ARCH=x86_64
       - CFLAGS=-m64
       - EXTENSION=dylib
+      - LIBNAME=lib$NAME.$EXTENSION
+      - WRAPPER_NAME=lib$NAME.wrapper.$EXTENSION
       - BODGE_CMAKE_FLAGS="-DCMAKE_C_COMPILER=$(which gcc) -DCMAKE_CXX_COMPILER=$(which g++)"
 
 compiler: gcc
@@ -50,7 +54,7 @@ before_install:
 
       sudo update-alternatives --remove-all gcc;
       sudo update-alternatives --remove-all g++;
-      sudo -E apt-get -yq --no-install-suggests --no-install-recommends install patchelf         \
+      sudo -E apt-get -yq --no-install-suggests --no-install-recommends install patchelf           \
         gcc-8 g++-8 g++-8-multilib libtool-bin autoconf automake libeigen3-dev libpng-dev
       sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 10;
       sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 10;
@@ -63,15 +67,14 @@ before_install:
           -o $BOOST_CACHE_DIR/$BOOST_NAME.tar.bz2                                                  \
         && cd $BOOST_CACHE_DIR                                                                     \
         && tar --bzip2 -xf $BOOST_NAME.tar.bz2                                                     \
-        && cd $BOOST_NAME && ./bootstrap.sh && ./b2;
+        && cd $BOOST_NAME && ./bootstrap.sh && ./b2 -d1 --build-type=minimal --layout=system       \
+          cxxflags="-march=x86-64" variant=release link=static address-model=64;
       fi;
-      cd $BOOST_CACHE_DIR/$BOOST_NAME && sudo ./b2 install;
+      cd $BOOST_CACHE_DIR/$BOOST_NAME && sudo ./b2 -d1 install;
     elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-       brew update
-       brew install libtool eigen boost gcc@8;
+       brew update 1>/dev/null 2>&1;
+       brew install eigen boost gcc@8;
        brew link --overwrite --force gcc;
-       echo | gcc -xc -E -v -;
-       echo | gcc -xc++ -E -v -;
     fi
 
 install:
@@ -85,11 +88,11 @@ script:
   - cd $TRAVIS_BUILD_DIR/ && zip -r spec.zip spec/
 
 before_deploy:
-  - export TARGET_FILE=$TRAVIS_BUILD_DIR/lib$NAME.$EXTENSION.bodged-$TARGET_ARCH-$TRAVIS_OS_NAME-$TRAVIS_BRANCH
-  - export TARGET_WRAPPER=$TRAVIS_BUILD_DIR/lib$NAME.$EXTENSION.bodged.wrapper-$TARGET_ARCH-$TRAVIS_OS_NAME-$TRAVIS_BRANCH
+  - export TARGET_FILE=$TRAVIS_BUILD_DIR/$LIBNAME-$TARGET_ARCH-$TRAVIS_OS_NAME-$TRAVIS_BRANCH
+  - export TARGET_WRAPPER=$TRAVIS_BUILD_DIR/$WRAPPER_NAME-$TARGET_ARCH-$TRAVIS_OS_NAME-$TRAVIS_BRANCH
   - export SPEC_ARCHIVE=$TARGET_FILE-spec.zip
-  - mv $TRAVIS_BUILD_DIR/lib/lib$NAME.$EXTENSION.bodged $TARGET_FILE
-  - mv $TRAVIS_BUILD_DIR/lib/lib$NAME.$EXTENSION.bodged.wrapper $TARGET_WRAPPER
+  - mv $TRAVIS_BUILD_DIR/lib/$LIBNAME $TARGET_FILE
+  - mv $TRAVIS_BUILD_DIR/lib/$WRAPPER_NAME $TARGET_WRAPPER
   - mv $TRAVIS_BUILD_DIR/spec.zip $SPEC_ARCHIVE
 
 deploy:
