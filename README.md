@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/borodust/bodge-five.svg)](https://travis-ci.org/borodust/bodge-five)
+[![Build Status](https://travis-ci.org/borodust/bodge-five.svg)](https://travis-ci.org/borodust/bodge-five) [![Build status](https://ci.appveyor.com/api/projects/status/gfwaqhm4h4v8mqqu?svg=true)](https://ci.appveyor.com/project/borodust/bodge-five)
 
 
 # libfive wrapper for Common Lisp
