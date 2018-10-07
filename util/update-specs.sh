@@ -15,7 +15,7 @@ declare -A platforms
 platforms=(["linux"]="so" ["osx"]="dylib" ["windows"]="dll")
 
 declare -A archs
-archs=(["x86_64"]="x86_64" ["i686"]="x86")
+archs=(["x86_64"]="x86_64")
 
 for arch in "${!archs[@]}" ; do
     for platform in "${!platforms[@]}" ; do
