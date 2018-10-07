@@ -22,7 +22,7 @@ for arch in "${!archs[@]}" ; do
         lib="lib$name.${platforms[$platform]}.bodged"
         url="$repository_url/releases/download/$1/$lib-$arch-$platform-$1"
 
-        spec_dir="$script_dir/../spec/"
+        spec_dir="$script_dir/../"
         spec_url="$url-spec.zip"
         spec_archive=$(mktemp /tmp/$lib-spec.XXXXXXXX)
         mkdir -p "$spec_dir"
