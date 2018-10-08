@@ -81,6 +81,8 @@ $(WRAPPER): library
 	  echo "Installing new name of $(BIN) into $(WRAPPER_BIN)";				\
 	  install_name_tool -change "$(LIBRARY)" "@loader_path/$(BIN)"				\
 	 	"$(WORK_DIR)/$(WRAPPER_BIN)";							\
+	  install_name_tool -change "@rpath/$(BIN)" "@loader_path/$(BIN)"			\
+	 	"$(WORK_DIR)/$(WRAPPER_BIN)";							\
 	fi
 
 
