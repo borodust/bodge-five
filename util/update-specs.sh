@@ -19,7 +19,7 @@ archs=(["x86_64"]="x86_64")
 
 for arch in "${!archs[@]}" ; do
     for platform in "${!platforms[@]}" ; do
-        lib="lib$name.${platforms[$platform]}.bodged"
+        lib="lib$name.${platforms[$platform]}"
         url="$repository_url/releases/download/$1/$lib-$arch-$platform-$1"
 
         spec_dir="$script_dir/../"
