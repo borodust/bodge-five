@@ -6,6 +6,7 @@
 ;; Adapted from "libfive_tree_render_slice" test case
 (defun render (&optional (svg-path (asdf:system-relative-pathname
                                     :bodge-five/example "local/circle.svg")))
+  (libfive:init (bodge-blobs-support:find-loaded-library-name :five-blob :main))
   (claw:with-float-traps-masked ()
     ;; All of these trees are manually managed and must be freed
     ;; In higher-level languages, freeing can be attached to the object's

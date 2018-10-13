@@ -1,0 +1,4 @@
+# build junk
+lib*.so*
+lib*.dll*
+lib*.dylib*

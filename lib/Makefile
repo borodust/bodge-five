@@ -30,35 +30,15 @@ LIBNAME = lib$(NAME)
 BIN := $(LIBNAME).$(EXTENSION)
 
 LIBRARY := $(LIBRARY_PATH)/$(BIN)
-
-################################
-# BODGED LIBRARY CONFIGURATION #
-################################
 BODGED_LIBRARY := $(WORK_DIR)/$(BIN)
-
-################################
-#    WRAPPER CONFIGURATION     #
-################################
-WRAPPER_SRC = cbv.c
-
-WRAPPER_OBJ = $(WRAPPER_SRC:.c=.o)
-WRAPPER_BIN = $(LIBNAME).wrapper.$(EXTENSION)
-WRAPPER = $(WORK_DIR)/$(WRAPPER_BIN)
-WRAPPER_CFLAGS = $(CFLAGS) -fPIC  -I$(INCLUDE_PATH) -I../ -L$(LIBRARY_PATH)
-WRAPPER_LIBS = -l$(NAME)
-
-ifeq ($(PLATFORM),linux)
-	WRAPPER_CFLAGS += -Wl,-soname,$(WRAPPER_BIN) -Wl,-rpath,'$$ORIGIN/'
-endif
-ifeq ($(PLATFORM),darwin)
-	WRAPPER_CFLAGS += -install_name '@loader_path/$(WRAPPER_BIN)'
-endif
+WRAPPER := $(WORK_DIR)/lib$(NAME).wrapper.$(EXTENSION)
 
 ################################
 #     BUILD CONFIGURATION      #
 ################################
 build: wrapper bodged-library
 
+library: $(LIBRARY)
 
 $(LIBRARY):
 	mkdir -p libfive/build && cd libfive/build/						\
@@ -67,27 +47,12 @@ $(LIBRARY):
 		 -DBUILD_STUDIO_APP=OFF -DBUILD_TESTS=OFF -DBUILD_GUILE_BINDINGS=OFF ..		\
 	&& cmake --build .
 
-
-library: $(LIBRARY)
-
-
 wrapper: $(WRAPPER)
 
-
-$(WRAPPER): library
-	$(CC) -shared $(WRAPPER_SRC) $(WRAPPER_CFLAGS) -o $(WRAPPER) $(WRAPPER_LIBS)
-	strip -S $(WRAPPER)
-	if [ "$(PLATFORM)" = "darwin" ] ; then							\
-	  echo "Installing new name of $(BIN) into $(WRAPPER_BIN)";				\
-	  install_name_tool -change "$(LIBRARY)" "@loader_path/$(BIN)"				\
-	 	"$(WORK_DIR)/$(WRAPPER_BIN)";							\
-	  install_name_tool -change "@rpath/$(BIN)" "@loader_path/$(BIN)"			\
-	 	"$(WORK_DIR)/$(WRAPPER_BIN)";							\
-	fi
-
+$(WRAPPER):
+	cd wrapper && make clean build
 
 bodged-library: $(BODGED_LIBRARY)
-
 
 $(BODGED_LIBRARY): library
 	cp -L $(LIBRARY) $(BODGED_LIBRARY)
@@ -103,7 +68,6 @@ $(BODGED_LIBRARY): library
 	  install_name_tool -id "@loader_path/$(BIN)" "$(BODGED_LIBRARY)";			\
 	;;											\
 	esac
-
 
 clean:
 	rm -rf $(BODGED_LIBRARY) $(WRAPPER) $(BUILD_DIR)
